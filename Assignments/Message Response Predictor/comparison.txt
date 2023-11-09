@@ -1,0 +1,14 @@
+# Plot learning curves for both custom and scikit-learn linear predictors in the same graph
+plt.figure(figsize=(12, 8))
+
+# Plot the learning curve for the custom linear predictor
+plot_learning_curve(range(1, num_iterations + 1), costs)
+
+# Plot the learning curve for the scikit-learn linear predictor
+plot_scikit_learning_curve(linear_reg_model, X_train, y_train, X_test, y_test)
+
+plt.title('Comparison of Learning Curves')
+plt.xlabel('Number of Iterations  Training Examples')
+plt.ylabel('Loss  Mean Squared Error')
+plt.legend()
+plt.show()

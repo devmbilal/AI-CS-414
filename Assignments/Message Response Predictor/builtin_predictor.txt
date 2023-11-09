@@ -1,0 +1,124 @@
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+def extract_features(messages, dates, times, senders):
+    features = []
+
+    # Initialize current_datetime with the first valid date and time
+    current_datetime = parser.parse(f"{dates[0]} {times[0]}")
+
+    # Initialize one-hot encoders
+    time_of_day_encoder = OneHotEncoder(sparse=False, categories='auto')
+    sender_encoder = OneHotEncoder(sparse=False, categories='auto')
+
+    # Fit the one-hot encoders on the entire dataset
+    time_of_day_encoded = time_of_day_encoder.fit_transform([[time] for time in ["morning", "afternoon", "evening"]])
+    sender_encoded = sender_encoder.fit_transform(np.array(senders).reshape(-1, 1))
+
+    for i in range(len(messages)):
+        # Feature 1: Message Length
+        length_feature = len(messages[i])
+
+        # # Feature 2: Time Gap (assuming date and time are in appropriate formats)
+        # if i > 0:
+        #     current_datetime = parser.parse(f"{dates[i]} {times[i]}")
+        #     previous_datetime = parser.parse(f"{dates[i-1]} {times[i-1]}")
+        #     time_gap_feature = (current_datetime - previous_datetime).total_seconds()
+        # else:
+        #     time_gap_feature = 0
+
+        # Feature 3: Keywords
+        keywords = ["yes", "no", "sure"]  # Add more keywords as needed
+        keyword_feature = any(keyword in messages[i].lower() for keyword in keywords)
+
+        # Feature 4: Sentiment Analysis
+        blob = TextBlob(messages[i])
+        sentiment_feature = blob.sentiment.polarity  # Range between -1 and 1
+
+        # Feature 5: Content Feature (presence of specific characters or symbols)
+        content_characters = ["@", "#", "!"]  # Add more characters as needed
+        content_feature = any(char in messages[i] for char in content_characters)
+
+        # Feature 6: Time of Day Feature
+        hour_of_day = current_datetime.hour
+        if 6 <= hour_of_day < 12:
+            time_of_day_feature = "morning"
+        elif 12 <= hour_of_day < 18:
+            time_of_day_feature = "afternoon"
+        else:
+            time_of_day_feature = "evening"
+
+        # Feature 7: Sender Name (Categorical Encoding)
+        sender_feature = senders[i]
+
+        # Apply one-hot encoding to categorical features
+        time_of_day_encoded_sample = time_of_day_encoded[["morning", "afternoon", "evening"].index(time_of_day_feature)].tolist()
+        sender_encoded_sample = sender_encoded[i].tolist()
+
+        # Add features to the feature vector
+        features.append([
+            length_feature, keyword_feature, sentiment_feature,
+            content_feature, *time_of_day_encoded_sample, *sender_encoded_sample
+        ])
+
+    return np.array(features, dtype=np.float64)
+
+# Load your dataset and extract features
+data_path = "/content/dataset.csv"
+df = pd.read_csv(data_path)
+
+
+# Extract features using the provided function
+X = extract_features(df['Message'], df['Date'], df['Time'], df['Sender'])
+df['is_response'] = df['Sender'].eq(df['Sender'].shift(-1)) & (df['Date'] == df['Date'].shift(-1))
+# Convert boolean values to integers (True -> 1, False -> 0)
+df['is_response'] = df['is_response'].astype(int)
+
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the built-in linear predictor (Linear Regression)
+linear_reg_model = LinearRegression()
+linear_reg_model.fit(X_train, y_train)
+
+# Make predictions on the testing set
+predictions_test = np.round(linear_reg_model.predict(X_test))
+
+# Evaluate the model's performance
+accuracy_test = accuracy_score(y_test, predictions_test)
+print("Scikit-Learn Linear Regression Accuracy:", accuracy_test)
+
+def plot_scikit_learning_curve(model, X_train, y_train, X_test, y_test):
+    train_residuals = []
+    test_residuals = []
+
+    for i in range(1, len(X_train) + 1):
+        # Fit the model on the first i training examples
+        model.fit(X_train[:i, :], y_train[:i])
+
+        # Predict on the training set
+        train_predictions = model.predict(X_train[:i, :])
+        train_residuals.append(np.mean((train_predictions - y_train[:i]) ** 2))
+
+        # Predict on the testing set
+        test_predictions = model.predict(X_test)
+        test_residuals.append(np.mean((test_predictions - y_test) ** 2))
+
+    # Plot the learning curve
+    plt.plot(range(1, len(X_train) + 1), train_residuals, label='Training Set')
+    plt.plot(range(1, len(X_train) + 1), test_residuals, label='Testing Set')
+    plt.title('Learning Curve for Scikit-Learn Linear Regression')
+    plt.xlabel('Number of Training Examples')
+    plt.ylabel('Mean Squared Error')
+    plt.legend()
+    plt.show()
+
+# Assuming X_train, y_train, X_test, y_test are defined
+plot_scikit_learning_curve(linear_reg_model, X_train, y_train, X_test, y_test)
+
