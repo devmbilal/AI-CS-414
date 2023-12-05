@@ -20,3 +20,12 @@ X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
 
+k_values = [3, 5, 7, 9]
+distance_metric = 'euclidean'
+knn_models = []
+
+for k in k_values:
+    print(f"Training KNN Model with K={k} and {distance_metric} distance metric...")
+    knn = KNeighborsClassifier(n_neighbors=k, metric=distance_metric)
+    knn.fit(X_train, y_train)
+    knn_models.append(knn)
