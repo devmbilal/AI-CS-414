@@ -29,3 +29,12 @@ for k in k_values:
     knn = KNeighborsClassifier(n_neighbors=k, metric=distance_metric)
     knn.fit(X_train, y_train)
     knn_models.append(knn)
+
+
+def create_neural_network(hidden_units, initialization):
+    model = Sequential()
+    model.add(Dense(units=hidden_units, input_dim=X_train.shape[1], activation='relu', kernel_initializer=initialization))
+    model.add(Dense(units=1, activation='sigmoid'))
+    optimizer = Adam(learning_rate=0.01)
+    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+    return model
