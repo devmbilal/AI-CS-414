@@ -38,3 +38,45 @@ def create_neural_network(hidden_units, initialization):
     optimizer = Adam(learning_rate=0.01)
     model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
     return model
+
+
+loss_zero_init = []
+loss_random_init = []
+
+print("Training Neural Network Model with Zero Initialization...")
+nn_model_zero_init = create_neural_network(5, initialization='zeros')
+history_zero_init = nn_model_zero_init.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val), verbose=1)
+loss_zero_init = history_zero_init.history['loss']
+
+print("Training Neural Network Model with Small Random Initialization...")
+nn_model_random_init = create_neural_network(5,initialization='random_uniform')
+history_random_init = nn_model_random_init.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val), verbose=1)
+loss_random_init = history_random_init.history['loss']
+
+# Zero Initialization Graph
+plt.figure(figsize=(8, 6))
+plt.plot(loss_zero_init, label='Zero Initialization')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curve for Zero Initialization')
+plt.legend()
+plt.show()
+
+# Random Initialization Graph
+plt.figure(figsize=(8, 6))
+plt.plot(loss_random_init, label='Random Initialization')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curve for Random Initialization')
+plt.legend()
+plt.show()
+
+# Comparison Graph
+plt.figure(figsize=(8, 6))
+plt.plot(loss_zero_init, label='Zero Initialization')
+plt.plot(loss_random_init, label='Random Initialization')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Curves for Different Weight Initialization Methods')
+plt.legend()
+plt.show()
