@@ -80,3 +80,46 @@ plt.ylabel('Loss')
 plt.title('Loss Curves for Different Weight Initialization Methods')
 plt.legend()
 plt.show()
+
+
+
+
+
+
+
+
+
+
+def create_neural_network(hidden_units, initialization, learning_rate):
+    model = Sequential()
+    model.add(Dense(units=hidden_units, input_dim=X_train.shape[1], activation='relu', kernel_initializer=initialization))
+    model.add(Dense(units=1, activation='sigmoid'))
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+learning_rates = [0.1, 0.05, 0.01, 0.005, 0.001]
+
+for lr in learning_rates:
+    print(f"Training Neural Network Model with Learning Rate: {lr}")
+    nn_model = create_neural_network(5, initialization='random_uniform', learning_rate=lr)
+    history = nn_model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val), verbose=1)
+
+    plt.plot(history.history['loss'], label=f'Training Loss (LR={lr})')
+    plt.plot(history.history['val_loss'], label=f'Validation Loss (LR={lr})')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title(f'Training and Validation Loss for Learning Rate: {lr}')
+    plt.legend()
+    plt.show()
+
+# Comparison graph for all learning rates
+plt.figure(figsize=(8, 6))
+for lr in learning_rates:
+    plt.plot(history.history['val_loss'], label=f'LR={lr}')
+
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Validation Loss Comparison for Different Learning Rates')
+plt.legend()
+plt.show()
